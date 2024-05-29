@@ -7,172 +7,150 @@ class PriorityQueue {
 private:
     vector<int> heap;
 
-    int parent(int i) { return (i - 1) / 2; }
-    int left(int i) { return 2 * i + 1; }
-    int right(int i) { return 2 * i + 2; }
-
-    void heapify_down(int i) {
-        int l = left(i);
-        int r = right(i);
-        int largest = i;
-        if (l < heap.size() && heap[l] > heap[largest]) {
-            largest = l;
-        }
-        if (r < heap.size() && heap[r] > heap[largest]) {
-            largest = r;
-        }
-        if (largest != i) {
-            swap(heap[i], heap[largest]);
-            heapify_down(largest);
+    void heapifyUp(int index) {
+        while (index > 0 && heap[(index - 1) / 2] < heap[index]) {
+            swap(heap[index], heap[(index - 1) / 2]);
+            index = (index - 1) / 2;
         }
     }
 
-    void heapify_up(int i) {
-        if (i && heap[parent(i)] < heap[i]) {
-            swap(heap[i], heap[parent(i)]);
-            heapify_up(parent(i));
+    void heapifyDown(int index) {
+        int largest = index;
+        int left = 2 * index + 1;
+        int right = 2 * index + 2;
+
+        if (left < heap.size() && heap[left] > heap[largest]) {
+            largest = left;
         }
+
+        if (right < heap.size() && heap[right] > heap[largest]) {
+            largest = right;
+        }
+
+        if (largest != index) {
+            swap(heap[index], heap[largest]);
+            heapifyDown(largest);
+        }
+    }
+
+    int findMinIndex() {
+        int minIndex = 0;
+        for (int i = 1; i < heap.size(); ++i) {
+            if (heap[i] < heap[minIndex]) {
+                minIndex = i;
+            }
+        }
+        return minIndex;
     }
 
 public:
-    void insert(int key) {
-        heap.push_back(key);
-        int index = heap.size() - 1;
-        heapify_up(index);
+    void insert(int element) {
+        heap.push_back(element);
+        heapifyUp(heap.size() - 1);
     }
 
     int getMin() {
         if (heap.empty()) {
-            cout << "Kopiec jest pusty!" << endl;
+            cout << "Kolejka jest pusta" << endl;
             return -1;
         }
 
-        int min = heap[0];
-
-        for (int i = 0; i < heap.size(); i++) {
-            if (heap[i] < min) {
-                min = heap[i];
-            }
-        }
-        return min;
+        return heap[findMinIndex()];
     }
 
-    void deleteMin() {
+    void removeMin() {
         if (heap.empty()) {
-            cout << "Kopiec jest pusty!" << endl;
+            cout << "Kolejka jest pusta" << endl;
             return;
         }
 
-        int minIndex = -1;
-        int min = heap[0];
-        for (int i = 0; i < heap.size(); i++) {
-            if (heap[i] < min) {
-                min = heap[i];
-                minIndex = i;
-            }
-        }
-
-        if (minIndex != -1) {
-            heap[minIndex] = heap.back();
-            heap.pop_back();
-            heapify_down(minIndex);
-        }
+        int minIndex = findMinIndex();
+        heap[minIndex] = heap.back();
+        heap.pop_back();
+        heapifyDown(minIndex);
     }
 
-    void increaseKey(int old_val, int new_val) {
-
-        if (heap.size() == 0) {
-            cout << "Kolejka jest pusta." << endl;
-            return;
-        }
-
+    void increaseKey(int oldKey, int newKey) {
         int index = -1;
 
-        for (int i = 0; i < heap.size(); i++) {
-            if (heap[i] == old_val) {
+        if (heap.empty()) {
+            cout << "Kolejka jest pusta" << endl;
+            return;
+        } else if (newKey <= oldKey) {
+            cout << "Nowa wartosc musi byc wieksza od poprzedniej" << endl;
+            return;
+        }
+
+        for (int i = 0; i < heap.size(); ++i) {
+            if (heap[i] == oldKey) {
                 index = i;
                 break;
             }
         }
 
-        if (index == -1) {
-            cout << "Podana wartosc nie znajduje sie w kolejce!" << endl;
-            return;
+        if (index != -1) {
+            heap[index] = newKey;
+            heapifyUp(index);
+        } else {
+            cout << "Element nie zostal znaleziony" << endl;
         }
-
-        if (heap[index] <= new_val) {
-            cout << "Nowy klucz musi byc wiekszy niz stary klucz.\n";
-            return;
-        }
-
-        heap[index] = new_val;
-        heapify_up(index);
     }
 
     void display() {
-
-        if (heap.size() == 0) {
-            cout << "Kolejka jest pusta!" << endl;
-            return;
-        }
-
-        for (int i = 0; i < heap.size(); i++) {
-            cout << heap[i] << " ";
+        for (int i : heap) {
+            cout << i << " ";
         }
         cout << endl;
     }
 };
 
-void menu() {
+int main() {
     PriorityQueue pq;
-    int choice, value_1, value_2;
+    int choice, value, oldKey, newKey;
 
-    while (true) {
+    while(true) {
         cout << "Menu:" << endl;
-        cout << "1. Wstaw" << endl;
-        cout << "2. Znajdz wartosc minimalna" << endl;
-        cout << "3. Usun wartosc minimalna" << endl;
-        cout << "4. Zamien klucz na wiekszy" << endl;
-        cout << "5. Wyswietl kolejke" << endl;
+        cout << "1. Dodaj" << endl;
+        cout << "2. Minimum" << endl;
+        cout << "3. Usun element (minimum)" << endl;
+        cout << "4. Zwieksz klucz" << endl;
+        cout << "5. Wyswietl" << endl;
         cout << "6. Wyjdz" << endl;
-        cout << "Wybierz opcje: ";
+        cout << "Opcja: ";
         cin >> choice;
 
         switch (choice) {
             case 1:
-                cout << "Wprowadź wartosc do wstawienia: ";
-                cin >> value_1;
-                pq.insert(value_1);
+                cout << "Wprowadz wartosc: ";
+                cin >> value;
+                pq.insert(value);
                 break;
             case 2:
-                value_1 = pq.getMin();
-                if (value_1 != -1) {
-                    cout << "Minimalna wartosc to: " << value_1 << endl;
+                value = pq.getMin();
+                if (value != -1) {
+                    cout << "Wartosc minimalna: " << value << endl;
                 }
                 break;
             case 3:
-                pq.deleteMin();
-                cout << "Minimalna wartosc zostala usunieta" << endl;
+                pq.removeMin();
                 break;
             case 4:
                 cout << "Wprowadz stary klucz: ";
-                cin >> value_1;
+                cin >> oldKey;
                 cout << "Wprowadz nowy klucz: ";
-                cin >> value_2;
-                pq.increaseKey(value_1, value_2);
+                cin >> newKey;
+                pq.increaseKey(oldKey, newKey);
                 break;
             case 5:
                 pq.display();
                 break;
             case 6:
-                return;
+                cout << "Wychodzenie..." << endl;
+                return 0;
             default:
-                cout << "Nieprawidlowa opcja..." << endl;
+                cout << "Niepoprawna opcja..." << endl;
         }
     }
-}
 
-int main() {
-    menu();
     return 0;
 }
